@@ -7,7 +7,7 @@
     <style>
         body { 
             font-family: Arial, sans-serif; 
-            margin: 10%; 
+            margin: 5% 10%; 
             line-height: 1.6; 
             background-color: #f9f9f9;
         }
@@ -16,36 +16,70 @@
             padding: 30px;
             border-radius: 8px;
             box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            max-width: 800px;
+            margin: 0 auto;
         }
-        h1 { color: #003366; }
-        ul { font-size: 18px; list-style-type: none; padding: 0; }
-        li { margin-bottom: 15px; }
-        a { 
+        h1 { color: #003366; margin-bottom: 10px; }
+        p { color: #333; }
+        
+        /* Zona de botones principales */
+        .grid-links {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin: 30px 0;
+        }
+        .btn-artefacto { 
             text-decoration: none; 
             color: #ffffff; 
             background-color: #0055a4; 
-            padding: 10px 15px; 
+            padding: 15px; 
             border-radius: 5px; 
-            display: inline-block;
+            text-align: center;
+            font-weight: bold;
+            transition: background 0.2s;
         }
-        a:hover { background-color: #003366; }
+        .btn-artefacto:hover { background-color: #003366; }
+
+        /* Botón para ver el código en GitHub */
+        .repo-section {
+            text-align: center;
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 1px solid #eee;
+        }
+        .btn-github {
+            text-decoration: none;
+            color: white;
+            background-color: #24292e; /* Color oficial de GitHub */
+            padding: 12px 24px;
+            border-radius: 5px;
+            display: inline-block;
+            font-weight: bold;
+            transition: background 0.2s;
+        }
+        .btn-github:hover { background-color: #555; }
     </style>
 </head>
 <body>
 
     <div class="container">
         <h1>Material Complementario: Artefactos HTML</h1>
-        <p>Seleccione uno de los siguientes artefactos para ejecutarlo en línea de manera interactiva. Estos recursos acompañan la propuesta descrita en el artículo.</p>
+        <p>Este espacio contiene los artefactos interactivos descritos en el artículo. Puede ejecutarlos directamente en línea seleccionando cualquiera de las opciones a continuación:</p>
         
-        <ul>
-            <li><a href="cholesky_ldlt.html">Factorización Cholesky LDLT</a></li>
-            <li><a href="lu_interactivo.html">Factorización LU Interactiva</a></li>
-            <li><a href="plu_pivoteo.html">Factorización PLU con Pivoteo</a></li>
-            <li><a href="qr_interactivo.html">Factorización QR Interactiva</a></li>
-        </ul>
+        <div class="grid-links">
+            <a class="btn-artefacto" href="cholesky_ldlt.html">Factorización Cholesky LDLT</a>
+            <a class="btn-artefacto" href="lu_interactivo.html">Factorización LU Interactiva</a>
+            <a class="btn-artefacto" href="plu_pivoteo.html">Factorización PLU con Pivoteo</a>
+            <a class="btn-artefacto" href="qr_interactivo.html">Factorización QR Interactiva</a>
+        </div>
         
-        <hr style="margin-top: 30px;">
-        <p style="font-size: 14px; color: #666;">Para descargar estos archivos y usarlos sin conexión, visite el repositorio principal de GitHub.</p>
+        <div class="repo-section">
+            <p>¿Desea revisar, descargar o reutilizar el código fuente completo de estos artefactos?</p>
+            <a class="btn-github" href="https://github.com/reyac01-bit/FMarticulo" target="_blank">
+                📁 Ver Código Fuente en GitHub
+            </a>
+        </div>
     </div>
 
 </body>
