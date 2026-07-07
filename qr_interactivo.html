@@ -1,0 +1,864 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Factorizador QR interactivo</title>
+<meta name="description" content="Artefacto interactivo para la factorización QR por Gram-Schmidt: proyecciones y restas paso a paso, radicales simplificados, vista geométrica, verificación doble y mínimos cuadrados.">
+<style>
+:root{
+  --azul:#254AA5;
+  --azul-oscuro:#17336E;
+  --marfil:#F8F8F5;
+  --gris-panel:#F2F2F2;
+  --gris-barra:#8C8C8C;
+  --gris-borde:#D9D9D9;
+  --tinta:#1E2126;
+  --gris-texto:#5A5F6A;
+  --verde:#006400;
+  --rojo:#A3262C;
+  --rojo-fondo:#FBEDED;
+  --resalte:#FFE9A8;
+  --fuente-ui:"Helvetica Neue",Helvetica,Arial,sans-serif;
+  --fuente-mate:"Palatino Linotype",Palatino,Georgia,serif;
+}
+*{box-sizing:border-box;}
+html{font-size:16px;}
+body{margin:0;font-family:var(--fuente-ui);color:var(--tinta);background:#FBFBF9;line-height:1.55;}
+header{background:#fff;border-bottom:3px solid var(--azul);padding:1.1rem 1rem 0.9rem;}
+.cabecera-int{max-width:1000px;margin:0 auto;}
+header h1{margin:0;font-size:1.45rem;color:var(--azul);font-weight:700;letter-spacing:0.01em;}
+header p{margin:0.25rem 0 0;color:var(--gris-texto);font-size:0.9rem;}
+main{max-width:1000px;margin:0 auto;padding:0 1rem 2rem;}
+footer{max-width:1000px;margin:0 auto;padding:1rem 1rem 2rem;color:var(--gris-texto);font-size:0.83rem;border-top:1px solid var(--gris-borde);}
+footer .cond{font-family:var(--fuente-mate);color:var(--tinta);}
+.tarjeta{background:#fff;border:1px solid var(--gris-borde);border-radius:6px;padding:1.1rem 1.25rem 1.25rem;margin:1.15rem 0;}
+.tarjeta-proceso{background:var(--gris-panel);border:none;border-left:5px solid var(--gris-barra);border-radius:0 6px 6px 0;}
+.tarjeta-ejemplo{background:var(--marfil);border:1px solid #ECEBE4;}
+.chip{display:inline-block;background:var(--azul);color:#fff;font-weight:700;font-size:0.85rem;padding:0.28rem 0.7rem;border-radius:3px;margin-bottom:0.6rem;letter-spacing:0.02em;}
+h2{font-size:1.05rem;color:var(--azul);margin:0 0 0.6rem;font-weight:700;}
+.nota{background:var(--marfil);border:1px solid #ECEBE4;border-radius:6px;padding:0.8rem 1rem;margin:0.9rem 0 0;font-size:0.92rem;}
+.nota b{color:var(--verde);}
+.mensaje-error{background:var(--rojo-fondo);border-left:5px solid var(--rojo);border-radius:0 6px 6px 0;padding:0.9rem 1rem;margin:0.9rem 0 0;}
+.mensaje-error b{color:var(--rojo);}
+.mensaje-exito{background:#EDF7F0;border-left:5px solid var(--verde);border-radius:0 6px 6px 0;padding:0.9rem 1rem;margin:0.9rem 0 0;}
+.mensaje-exito b{color:var(--verde);}
+.controles{display:flex;flex-wrap:wrap;gap:0.55rem;align-items:center;margin-bottom:0.9rem;}
+label.etq{font-size:0.9rem;color:var(--gris-texto);}
+select,button{font-family:var(--fuente-ui);font-size:0.9rem;}
+select{padding:0.4rem 0.5rem;border:1px solid var(--gris-borde);border-radius:4px;background:#fff;}
+button{cursor:pointer;border-radius:4px;padding:0.48rem 0.95rem;border:1px solid var(--azul);background:var(--azul);color:#fff;transition:background 0.15s ease;}
+button:hover{background:var(--azul-oscuro);}
+button:focus-visible{outline:3px solid #A9BCE8;outline-offset:1px;}
+button.sec{background:#fff;color:var(--azul);}
+button.sec:hover{background:#EEF2FB;}
+button:disabled{opacity:0.45;cursor:default;}
+table.rejilla{border-collapse:separate;border-spacing:0.3rem;}
+table.rejilla input{width:4.3rem;padding:0.42rem 0.3rem;text-align:center;font-family:var(--fuente-mate);font-size:1rem;border:1px solid var(--gris-borde);border-radius:4px;}
+table.rejilla input:focus-visible{outline:2px solid var(--azul);}
+.ayuda{font-size:0.82rem;color:var(--gris-texto);margin-top:0.4rem;}
+.mat{display:inline-flex;align-items:center;vertical-align:middle;font-family:var(--fuente-mate);font-size:1.05rem;}
+.mat .paren{border-left:2px solid var(--tinta);border-right:2px solid var(--tinta);border-radius:0.85em;padding:0.25em 0.5em;}
+.mat table{border-collapse:separate;border-spacing:0.85em 0.3em;margin:0;}
+.mat td{text-align:center;padding:0;min-width:1.1em;}
+.mat.pequena{font-size:0.95rem;}
+.mat.pequena table{border-spacing:0.6em 0.2em;}
+td.resalte{background:var(--resalte);border-radius:4px;box-shadow:0 0 0 4px var(--resalte);}
+.rotulo-mat{font-family:var(--fuente-mate);font-style:italic;margin-right:0.4rem;}
+.frac{display:inline-flex;flex-direction:column;align-items:center;vertical-align:-0.55em;line-height:1.05;font-size:0.92em;}
+.frac .fnum{border-bottom:1.3px solid currentColor;padding:0 0.18em;}
+.frac .fden{padding:0 0.18em;}
+.radicando{border-top:1.3px solid currentColor;padding:0 0.12em;}
+.operacion{font-family:var(--fuente-mate);font-size:1.1rem;margin:0.4rem 0 0.9rem;}
+.operacion .etiqueta-paso{font-family:var(--fuente-ui);font-size:0.82rem;color:var(--gris-texto);display:block;margin-bottom:0.15rem;font-style:normal;}
+.fila-factores{display:flex;flex-wrap:wrap;gap:1.6rem;align-items:center;margin-top:0.5rem;}
+.factor{display:flex;align-items:center;}
+.navegacion{display:flex;flex-wrap:wrap;gap:0.5rem;align-items:center;margin-top:1rem;}
+.navegacion .contador{font-size:0.85rem;color:var(--gris-texto);margin-left:0.3rem;}
+.ecuaciones{font-family:var(--fuente-mate);font-size:1.05rem;margin:0.4rem 0 0.6rem;}
+.ecuaciones div{margin:0.28rem 0;}
+.despeje{margin:0.28rem 0 0.28rem 1rem;}
+.subtitulo{font-weight:700;color:var(--azul);font-size:0.92rem;margin:0.9rem 0 0.2rem;}
+.entrada-b{display:flex;gap:0.35rem;align-items:center;flex-wrap:wrap;margin-top:0.6rem;}
+.entrada-b input{width:4.3rem;padding:0.42rem 0.3rem;text-align:center;font-family:var(--fuente-mate);font-size:1rem;border:1px solid var(--gris-borde);border-radius:4px;}
+.check-sistema{margin-top:0.8rem;font-size:0.92rem;display:flex;align-items:center;gap:0.45rem;}
+.leyenda-svg{font-size:0.85rem;color:var(--gris-texto);margin:0.4rem 0 0;}
+.leyenda-svg .cuad{display:inline-block;width:0.75rem;height:0.75rem;border-radius:2px;vertical-align:-0.1rem;margin-right:0.25rem;}
+.oculto{display:none;}
+sub{font-size:0.72em;}
+sup{font-size:0.72em;}
+@media (max-width:640px){
+  .fila-factores{flex-direction:column;align-items:flex-start;}
+  table.rejilla input,.entrada-b input{width:3.6rem;}
+  header h1{font-size:1.2rem;}
+}
+</style>
+</head>
+<body>
+<header>
+  <div class="cabecera-int">
+    <h1>Factorizador QR interactivo</h1>
+    <p>Ortogonalización de Gram-Schmidt paso a paso: proyecciones, restas y normalizaciones a la vista, con radicales simplificados, verificación doble (<span style="font-family:var(--fuente-mate);font-style:italic;">QR&nbsp;=&nbsp;A</span> y <span style="font-family:var(--fuente-mate);font-style:italic;">Q<sup>T</sup>Q&nbsp;=&nbsp;I</span>) y conexión con mínimos cuadrados.</p>
+  </div>
+</header>
+
+<main>
+  <section class="tarjeta" id="seccion-entrada">
+    <h2>1. Ingrese la matriz</h2>
+    <div class="controles">
+      <label class="etq" for="sel-m">Filas:</label>
+      <select id="sel-m" aria-label="Número de filas">
+        <option value="2">2</option>
+        <option value="3" selected>3</option>
+        <option value="4">4</option>
+      </select>
+      <label class="etq" for="sel-nc">Columnas:</label>
+      <select id="sel-nc" aria-label="Número de columnas">
+        <option value="2" selected>2</option>
+        <option value="3">3</option>
+      </select>
+      <button class="sec" id="btn-ej-recta">Cargar ajuste de recta (mínimos cuadrados)</button>
+      <button class="sec" id="btn-ej-a">Cargar matriz A*</button>
+      <button class="sec" id="btn-reiniciar">Reiniciar</button>
+    </div>
+    <p style="margin:0 0 0.35rem;font-size:0.9rem;color:var(--gris-texto);">Matriz <span class="rotulo-mat">A</span>, cuyas columnas se tratarán como vectores (acepta enteros, fracciones como <span style="font-family:var(--fuente-mate);">8/3</span> y decimales como <span style="font-family:var(--fuente-mate);">2.5</span>):</p>
+    <div id="cont-rejilla"></div>
+    <p class="ayuda">Las entradas vacías se toman como 0. Pruebe columnas proporcionales para observar el caso de falla (columnas linealmente dependientes).</p>
+    <label class="check-sistema">
+      <input type="checkbox" id="chk-mc">
+      Resolver mínimos cuadrados: <span style="font-family:var(--fuente-mate);font-style:italic;">R&thinsp;X&#770;&nbsp;=&nbsp;Q<sup>T</sup>B<sub>0</sub></span>
+    </label>
+    <div class="entrada-b oculto" id="cont-b"></div>
+    <div class="controles" style="margin-top:1rem;margin-bottom:0;">
+      <button id="btn-factorizar">Factorizar</button>
+    </div>
+    <div id="zona-mensaje-entrada"></div>
+  </section>
+
+  <section class="tarjeta tarjeta-proceso oculto" id="seccion-proceso">
+    <h2>2. Proceso de Gram-Schmidt</h2>
+    <p style="font-size:0.9rem;color:var(--gris-texto);margin:0;">
+      En cada etapa se calcula el coeficiente de proyección (que ingresa a <span class="rotulo-mat">R</span>), se resta la proyección (lo que produce la ortogonalidad) y se normaliza (la norma también ingresa a <span class="rotulo-mat">R</span>). Como <span class="rotulo-mat">L</span> en la eliminación, la matriz <span class="rotulo-mat">R</span> es un registro del proceso.
+    </p>
+    <div class="operacion" id="texto-operacion"></div>
+    <div class="fila-factores" id="fila-factores"></div>
+    <div class="navegacion">
+      <button class="sec" id="btn-inicio">Inicio</button>
+      <button class="sec" id="btn-anterior">Anterior</button>
+      <button id="btn-siguiente">Siguiente</button>
+      <button class="sec" id="btn-final">Ejecutar todo</button>
+      <span class="contador" id="contador-pasos"></span>
+    </div>
+    <div id="zona-mensaje-proceso"></div>
+  </section>
+
+  <section class="tarjeta oculto" id="seccion-geometria">
+    <h2>Vista geométrica</h2>
+    <p style="font-size:0.9rem;color:var(--gris-texto);margin:0 0 0.4rem;">Las columnas originales y los vectores ortonormalizados, dibujados desde el origen.</p>
+    <div id="cont-svg"></div>
+    <p class="leyenda-svg">
+      <span class="cuad" style="background:#8C8C8C;"></span>columnas a<sub>k</sub> de A&nbsp;&nbsp;&nbsp;
+      <span class="cuad" style="background:#254AA5;"></span>vectores ortonormales q<sub>k</sub>
+      <span id="leyenda-circulo"></span>
+    </p>
+  </section>
+
+  <section class="tarjeta tarjeta-ejemplo oculto" id="seccion-verificacion">
+    <span class="chip">Verificación doble</span>
+    <div id="contenido-verificacion"></div>
+  </section>
+
+  <section class="tarjeta tarjeta-ejemplo oculto" id="seccion-minimos">
+    <span class="chip">Mínimos cuadrados</span>
+    <div id="contenido-minimos"></div>
+  </section>
+</main>
+
+<footer>
+  <p class="cond"><b style="color:var(--azul);font-family:var(--fuente-ui);">Condición de existencia.</b>
+  Si las columnas de A son linealmente independientes, existen Q con columnas ortonormales
+  (Q<sup>T</sup>Q&nbsp;=&nbsp;I) y R triangular superior con diagonal positiva tales que A&nbsp;=&nbsp;QR.
+  Cuando una columna es combinación lineal de las anteriores, el proceso de Gram-Schmidt produce
+  v<sub>k</sub>&nbsp;=&nbsp;0 y la factorización, en la forma enunciada, no existe.</p>
+  <p>Artefacto 4 de la propuesta «Factorizaciones matriciales interactivas para la enseñanza del álgebra lineal mediante recursos HTML».
+  Revista digital Matemática, Educación e Internet, Instituto Tecnológico de Costa Rica.
+  Este artefacto implementa la versión clásica del proceso, suficiente para los tamaños tratados;
+  la práctica numérica prefiere variantes más estables.</p>
+</footer>
+
+<script>
+"use strict";
+/* ============================================================
+   Núcleo matemático: fracciones exactas con BigInt
+   ============================================================ */
+function mcdBig(a, b){
+  a = a < 0n ? -a : a;
+  b = b < 0n ? -b : b;
+  while (b){ const t = a % b; a = b; b = t; }
+  return a;
+}
+class Frac{
+  constructor(n, d){
+    if (d === undefined) d = 1n;
+    n = BigInt(n); d = BigInt(d);
+    if (d === 0n) throw new Error("Denominador cero");
+    if (d < 0n){ n = -n; d = -d; }
+    const g = mcdBig(n, d);
+    if (g > 1n){ n = n / g; d = d / g; }
+    this.n = n; this.d = d;
+  }
+  static cero(){ return new Frac(0n, 1n); }
+  static uno(){ return new Frac(1n, 1n); }
+  sumar(o){ return new Frac(this.n * o.d + o.n * this.d, this.d * o.d); }
+  restar(o){ return new Frac(this.n * o.d - o.n * this.d, this.d * o.d); }
+  por(o){ return new Frac(this.n * o.n, this.d * o.d); }
+  entre(o){
+    if (o.n === 0n) throw new Error("División entre cero");
+    return new Frac(this.n * o.d, this.d * o.n);
+  }
+  negado(){ return new Frac(-this.n, this.d); }
+  esCero(){ return this.n === 0n; }
+  esUno(){ return this.n === 1n && this.d === 1n; }
+  esNegativa(){ return this.n < 0n; }
+  igualA(o){ return this.n === o.n && this.d === o.d; }
+  aTexto(){ return this.d === 1n ? this.n.toString() : this.n.toString() + "/" + this.d.toString(); }
+  aNumero(){ return Number(this.n) / Number(this.d); }
+}
+function leerFrac(txt){
+  if (txt === null || txt === undefined) return null;
+  let s = String(txt).trim().replace(",", ".");
+  if (s === "") return Frac.cero();
+  s = s.replace(/\u2212/g, "-");
+  let m = s.match(/^([+-]?\d+)$/);
+  if (m) return new Frac(BigInt(m[1]), 1n);
+  m = s.match(/^([+-]?\d+)\s*\/\s*(-?\d+)$/);
+  if (m){
+    const den = BigInt(m[2]);
+    if (den === 0n) return null;
+    return new Frac(BigInt(m[1]), den);
+  }
+  m = s.match(/^([+-]?)(\d*)\.(\d+)$/);
+  if (m){
+    const signo = m[1] === "-" ? -1n : 1n;
+    const ent = m[2] === "" ? "0" : m[2];
+    const dec = m[3];
+    const pot = 10n ** BigInt(dec.length);
+    return new Frac(signo * (BigInt(ent) * pot + BigInt(dec)), pot);
+  }
+  return null;
+}
+function puntoVec(u, v){
+  let s = Frac.cero();
+  for (let i = 0; i < u.length; i++) s = s.sumar(u[i].por(v[i]));
+  return s;
+}
+function extraerCuadrado(N){
+  if (N === 0n) return { s: 0n, m: 1n };
+  let s = 1n, m = N, i = 2n, iter = 0;
+  while (i * i <= m && iter < 100000){
+    while (m % (i * i) === 0n){ m /= i * i; s *= i; }
+    i += 1n; iter += 1;
+  }
+  return { s: s, m: m };
+}
+function raizDeFrac(f){ /* f >= 0 -> {c, m} con sqrt(f) = c * sqrt(m) */
+  if (f.esCero()) return { c: Frac.cero(), m: 1n };
+  const em = extraerCuadrado(f.n * f.d);
+  return { c: new Frac(em.s, f.d), m: em.m };
+}
+
+/* ============================================================
+   Gram-Schmidt clásico con registro de pasos.
+   Hechos que la implementación explota:
+   - Los vectores v_k son racionales.
+   - Cada entrada de Q (columna k) y de R (fila k) es c·sqrt(m_k),
+     con m_k la parte libre de cuadrados de s_k = ||v_k||^2.
+   Devuelve { ok, pasos, v, s, w, Q, R, colFalla }
+     v[k]: vector racional; s[k] = v_k·v_k;
+     w[j][k] = v_j · a_k (j < k, coeficientes de proyección sin normalizar);
+     Q, R: matrices de radicales {c, m} (null en entradas aún no definidas).
+   ============================================================ */
+function radNulo(){ return null; }
+function factorizarQR(A){
+  const m = A.length, n = A[0].length;
+  const cols = [];
+  for (let k = 0; k < n; k++){
+    const c = [];
+    for (let i = 0; i < m; i++) c.push(A[i][k]);
+    cols.push(c);
+  }
+  const v = [], s = [], raiz = [], w = [];
+  for (let j = 0; j < n; j++){ w.push(new Array(n).fill(null)); }
+  const Q = [], R = [];
+  for (let i = 0; i < m; i++) Q.push(new Array(n).fill(null));
+  for (let i = 0; i < n; i++) R.push(new Array(n).fill(null));
+  const foto = function(M){ return M.map(function(f){ return f.slice(); }); };
+  const pasos = [{ tipo: "inicio", desc: { cols: cols }, Q: foto(Q), R: foto(R), colRes: -1, celdaR: null }];
+
+  for (let k = 0; k < n; k++){
+    /* proyecciones sobre los q anteriores */
+    let vk = cols[k].slice();
+    for (let j = 0; j < k; j++){
+      w[j][k] = puntoVec(v[j], cols[k]);
+      const rjk = { c: w[j][k].por(raiz[j].c).entre(s[j]), m: raiz[j].m }; /* q_j·a_k */
+      R[j][k] = rjk;
+      pasos.push({ tipo: "proyeccion", desc: { j: j, k: k, r: rjk },
+        Q: foto(Q), R: foto(R), colRes: -1, celdaR: [j, k] });
+      const coef = w[j][k].entre(s[j]); /* resta en términos de v_j (racional) */
+      for (let i = 0; i < m; i++) vk[i] = vk[i].restar(coef.por(v[j][i]));
+    }
+    if (k > 0){
+      pasos.push({ tipo: "resta", desc: { k: k, vk: vk.slice() },
+        Q: foto(Q), R: foto(R), colRes: -1, celdaR: null });
+    }
+    /* ¿columna dependiente? */
+    let esCero = true;
+    for (let i = 0; i < m; i++) if (!vk[i].esCero()) esCero = false;
+    if (esCero){
+      pasos.push({ tipo: "dependiente", desc: { k: k, vk: vk.slice() },
+        Q: foto(Q), R: foto(R), colRes: -1, celdaR: null });
+      return { ok: false, pasos: pasos, v: v, s: s, w: w, Q: Q, R: R, colFalla: k };
+    }
+    /* normalización */
+    v.push(vk);
+    s.push(puntoVec(vk, vk));
+    raiz.push(raizDeFrac(s[k]));
+    for (let i = 0; i < m; i++)
+      Q[i][k] = { c: vk[i].por(raiz[k].c).entre(s[k]), m: raiz[k].m }; /* v_i * sqrt(s)/s */
+    R[k][k] = { c: raiz[k].c, m: raiz[k].m };
+    pasos.push({ tipo: "norma", desc: { k: k, s: s[k], norma: { c: raiz[k].c, m: raiz[k].m } },
+      Q: foto(Q), R: foto(R), colRes: k, celdaR: [k, k] });
+  }
+  /* Parte inferior de R: ceros exactos (durante el proceso se muestran puntos) */
+  for (let i = 0; i < n; i++)
+    for (let j = 0; j < i; j++) R[i][j] = { c: Frac.cero(), m: 1n };
+  return { ok: true, pasos: pasos, v: v, s: s, w: w, Q: Q, R: R, colFalla: -1 };
+}
+
+/* Producto QR exacto (racional): (QR)_ik = suma_{j<=k} v_ij * w_jk / s_j, con w_kk = s_k */
+function productoQR(res, m, n){
+  const P = [];
+  for (let i = 0; i < m; i++){
+    P.push([]);
+    for (let k = 0; k < n; k++){
+      let acum = Frac.cero();
+      for (let j = 0; j <= k; j++){
+        const wjk = (j === k) ? res.s[k] : res.w[j][k];
+        acum = acum.sumar(res.v[j][i].por(wjk).entre(res.s[j]));
+      }
+      P[i].push(acum);
+    }
+  }
+  return P;
+}
+/* Q^T Q exacta: entrada (j,k) = v_j·v_k / sqrt(s_j s_k); ortogonalidad exacta v_j·v_k = 0 */
+function productoQtQ(res, n){
+  const P = [];
+  for (let j = 0; j < n; j++){
+    P.push([]);
+    for (let k = 0; k < n; k++){
+      if (j === k){ P[j].push(Frac.uno()); continue; }
+      const p = puntoVec(res.v[j], res.v[k]);
+      if (!p.esCero()) throw new Error("Ortogonalidad rota");
+      P[j].push(Frac.cero());
+    }
+  }
+  return P;
+}
+function matricesFracIguales(P, Q){
+  for (let i = 0; i < P.length; i++)
+    for (let j = 0; j < P[i].length; j++)
+      if (!P[i][j].igualA(Q[i][j])) return false;
+  return true;
+}
+
+/* ============================================================
+   Mínimos cuadrados: R Xg = Q^T B0, resuelto de forma exacta.
+   La fila k de R y la entrada k de Q^T B0 comparten radicando m_k,
+   de modo que la sustitución regresiva ocurre entre coeficientes.
+   Devuelve { x (Frac[]), rhs (radicales), AtA, Atb } para exhibición.
+   ============================================================ */
+function resolverMinimos(res, A, b){
+  const n = res.s.length, m = A.length;
+  const raiz = res.s.map(raizDeFrac);
+  const rhs = [];
+  /* coeficiente de (Q^T b)_k respecto de sqrt(m_k): (v_k·b) * c_k / s_k */
+  const rhsCoef = [];
+  for (let k = 0; k < n; k++){
+    const vb = puntoVec(res.v[k], b);
+    rhsCoef.push(vb.por(raiz[k].c).entre(res.s[k]));
+    rhs.push({ c: rhsCoef[k], m: raiz[k].m });
+  }
+  /* coeficientes de R (fila k): diagonal c_k; fuera de diagonal w_kj * c_k / s_k */
+  const Rcoef = [];
+  for (let k = 0; k < n; k++){
+    Rcoef.push(new Array(n).fill(null));
+    Rcoef[k][k] = raiz[k].c;
+    for (let j = k + 1; j < n; j++) Rcoef[k][j] = res.w[k][j].por(raiz[k].c).entre(res.s[k]);
+  }
+  const x = new Array(n);
+  for (let k = n - 1; k >= 0; k--){
+    let t = rhsCoef[k];
+    for (let j = k + 1; j < n; j++) t = t.restar(Rcoef[k][j].por(x[j]));
+    x[k] = t.entre(Rcoef[k][k]);
+  }
+  /* ecuaciones normales para la comprobación */
+  const AtA = [], Atb = [];
+  for (let i = 0; i < n; i++){
+    AtA.push([]);
+    let sb = Frac.cero();
+    for (let r = 0; r < m; r++) sb = sb.sumar(A[r][i].por(b[r]));
+    Atb.push(sb);
+    for (let j = 0; j < n; j++){
+      let sa = Frac.cero();
+      for (let r = 0; r < m; r++) sa = sa.sumar(A[r][i].por(A[r][j]));
+      AtA[i].push(sa);
+    }
+  }
+  let normalesOk = true;
+  for (let i = 0; i < n; i++){
+    let sfila = Frac.cero();
+    for (let j = 0; j < n; j++) sfila = sfila.sumar(AtA[i][j].por(x[j]));
+    if (!sfila.igualA(Atb[i])) normalesOk = false;
+  }
+  return { x: x, rhs: rhs, Rcoef: Rcoef, AtA: AtA, Atb: Atb, normalesOk: normalesOk };
+}
+
+/* ============================================================
+   Interfaz (solo en navegador)
+   ============================================================ */
+if (typeof document !== "undefined"){
+(function(){
+  const $ = function(id){ return document.getElementById(id); };
+
+  function fracHTML(f){
+    if (f.d === 1n) return f.n.toString().replace("-", "&minus;");
+    const neg = f.n < 0n;
+    const num = (neg ? -f.n : f.n).toString();
+    return (neg ? "&minus;" : "") +
+      '<span class="frac"><span class="fnum">' + num +
+      '</span><span class="fden">' + f.d.toString() + "</span></span>";
+  }
+  function radHTML(r){
+    if (r === null) return "&middot;";
+    if (r.c.esCero()) return "0";
+    if (r.m === 1n) return fracHTML(r.c);
+    const neg = r.c.esNegativa();
+    const abs = neg ? r.c.negado() : r.c;
+    const radical = "&radic;<span class=\"radicando\">" + r.m.toString() + "</span>";
+    let cuerpo;
+    if (abs.d === 1n){
+      cuerpo = (abs.n === 1n ? "" : abs.n.toString()) + radical;
+    } else {
+      const numTxt = (abs.n === 1n ? "" : abs.n.toString()) + radical;
+      cuerpo = '<span class="frac"><span class="fnum">' + numTxt +
+               '</span><span class="fden">' + abs.d.toString() + "</span></span>";
+    }
+    return (neg ? "&minus;" : "") + cuerpo;
+  }
+  function radNumero(r){ return r === null ? 0 : r.c.aNumero() * Math.sqrt(Number(r.m)); }
+  function matrizRadHTML(M, rotulo, celdaRes, colRes, pequena){
+    let h = '<span class="mat' + (pequena ? " pequena" : "") + '">';
+    if (rotulo) h += '<span class="rotulo-mat">' + rotulo + "</span><span style='margin-right:0.35rem;'>=</span>";
+    h += '<span class="paren"><table><tbody>';
+    for (let i = 0; i < M.length; i++){
+      h += "<tr>";
+      for (let j = 0; j < M[i].length; j++){
+        const res = (celdaRes && celdaRes[0] === i && celdaRes[1] === j) || (colRes === j && M[i][j] !== null);
+        h += "<td" + (res ? ' class="resalte"' : "") + ">" + radHTML(M[i][j]) + "</td>";
+      }
+      h += "</tr>";
+    }
+    h += "</tbody></table></span></span>";
+    return h;
+  }
+  function matrizFracHTML(M, rotulo, pequena){
+    let h = '<span class="mat' + (pequena ? " pequena" : "") + '">';
+    if (rotulo) h += '<span class="rotulo-mat">' + rotulo + "</span><span style='margin-right:0.35rem;'>=</span>";
+    h += '<span class="paren"><table><tbody>';
+    for (let i = 0; i < M.length; i++){
+      h += "<tr>";
+      for (let j = 0; j < M[i].length; j++) h += "<td>" + fracHTML(M[i][j]) + "</td>";
+      h += "</tr>";
+    }
+    h += "</tbody></table></span></span>";
+    return h;
+  }
+  function vectorFracHTML(v, rotulo){
+    return matrizFracHTML(v.map(function(x){ return [x]; }), rotulo, true);
+  }
+  function matrizNumericaHTML(M, rotulo){
+    const T = M.map(function(f){ return f.map(function(r){
+      const val = radNumero(r);
+      return Object.is(val, -0) ? "0" : (Math.round(val * 10000) / 10000).toString().replace("-", "&minus;");
+    }); });
+    let h = '<span class="mat pequena"><span class="rotulo-mat">' + rotulo +
+            "</span><span style='margin-right:0.35rem;'>&asymp;</span>" +
+            '<span class="paren"><table><tbody>';
+    for (let i = 0; i < T.length; i++){
+      h += "<tr>";
+      for (let j = 0; j < T[i].length; j++) h += "<td>" + T[i][j] + "</td>";
+      h += "</tr>";
+    }
+    h += "</tbody></table></span></span>";
+    return h;
+  }
+  function subv(nombre, i){ return nombre + "<sub>" + (i + 1) + "</sub>"; }
+
+  let m = 3, nc = 2;
+  let A = null, B0 = null;
+  let resultado = null, pasoActual = 0;
+
+  function ajustarOpcionesColumnas(){
+    const sel = $("sel-nc");
+    const maxCols = Math.min(3, m);
+    let h = "";
+    for (let c = 2; c <= maxCols; c++) h += '<option value="' + c + '">' + c + "</option>";
+    sel.innerHTML = h;
+    if (nc > maxCols) nc = maxCols;
+    sel.value = String(nc);
+  }
+  function construirRejilla(){
+    let h = '<table class="rejilla"><tbody>';
+    for (let i = 0; i < m; i++){
+      h += "<tr>";
+      for (let j = 0; j < nc; j++){
+        h += '<td><input type="text" id="a-' + i + "-" + j +
+             '" autocomplete="off" aria-label="Entrada (' + (i + 1) + "," + (j + 1) + ')"></td>';
+      }
+      h += "</tr>";
+    }
+    h += "</tbody></table>";
+    $("cont-rejilla").innerHTML = h;
+    let hb = '<span class="rotulo-mat">B<sub>0</sub></span><span>=</span>&nbsp;(';
+    for (let i = 0; i < m; i++){
+      hb += '<input type="text" id="b-' + i + '" autocomplete="off" aria-label="Entrada ' + (i + 1) + ' de B0">';
+      if (i < m - 1) hb += ",&nbsp;";
+    }
+    hb += ')<sup>T</sup>';
+    $("cont-b").innerHTML = hb;
+  }
+  function fijarValores(vals, bvals){
+    for (let i = 0; i < m; i++)
+      for (let j = 0; j < nc; j++)
+        $("a-" + i + "-" + j).value = vals ? vals[i][j] : "";
+    for (let i = 0; i < m; i++) $("b-" + i).value = bvals ? bvals[i] : "";
+  }
+  function ocultarResultados(){
+    ["seccion-proceso","seccion-geometria","seccion-verificacion","seccion-minimos"].forEach(function(id){
+      $(id).classList.add("oculto");
+    });
+    $("zona-mensaje-entrada").innerHTML = "";
+    $("zona-mensaje-proceso").innerHTML = "";
+    resultado = null;
+  }
+  function leerMatriz(){
+    const M = [];
+    for (let i = 0; i < m; i++){
+      M.push([]);
+      for (let j = 0; j < nc; j++){
+        const f = leerFrac($("a-" + i + "-" + j).value);
+        if (f === null) return { error: [i, j] };
+        M[i].push(f);
+      }
+    }
+    return { M: M };
+  }
+  function leerB(){
+    const v = [];
+    for (let i = 0; i < m; i++){
+      const f = leerFrac($("b-" + i).value);
+      if (f === null) return { error: i };
+      v.push(f);
+    }
+    return { v: v };
+  }
+
+  function pintarPaso(){
+    const p = resultado.pasos[pasoActual];
+    let opHTML;
+    if (p.tipo === "inicio"){
+      let vecs = "";
+      p.desc.cols.forEach(function(c, k){
+        vecs += '<span class="factor">' + vectorFracHTML(c, subv("a", k)) + "</span>";
+      });
+      opHTML = '<span class="etiqueta-paso">Estado inicial</span>' +
+        "Las columnas de A se tratan como vectores. Utilice «Siguiente» para ejecutar cada etapa del proceso.";
+      $("fila-factores").innerHTML = vecs;
+    } else if (p.tipo === "proyeccion"){
+      opHTML = '<span class="etiqueta-paso">Coeficiente de proyección (ingresa a R en la posición (' +
+        (p.desc.j + 1) + "," + (p.desc.k + 1) + "))</span>" +
+        "r<sub>" + (p.desc.j + 1) + (p.desc.k + 1) + "</sub> = " +
+        subv("q", p.desc.j) + "<sup>T</sup>" + subv("a", p.desc.k) + " = " + radHTML(p.desc.r);
+      $("fila-factores").innerHTML =
+        '<span class="factor">' + matrizRadHTML(p.Q, "Q", null, -1) + "</span>" +
+        '<span class="factor">' + matrizRadHTML(p.R, "R", p.celdaR, -1) + "</span>";
+    } else if (p.tipo === "resta"){
+      let formula = subv("v", p.desc.k) + " = " + subv("a", p.desc.k);
+      for (let j = 0; j < p.desc.k; j++)
+        formula += " &minus; r<sub>" + (j + 1) + (p.desc.k + 1) + "</sub>&thinsp;" + subv("q", j);
+      opHTML = '<span class="etiqueta-paso">Resta de las proyecciones</span>' + formula +
+        '<span style="font-family:var(--fuente-ui);font-size:0.85rem;color:var(--gris-texto);display:block;margin-top:0.2rem;">Observe que ' +
+        "q<sub>j</sub><sup>T</sup>" + subv("v", p.desc.k) +
+        " = 0 para todo j &lt; " + (p.desc.k + 1) +
+        ": la resta de las proyecciones produjo la ortogonalidad (el resultado es un vector de entradas racionales).</span>";
+      $("fila-factores").innerHTML =
+        '<span class="factor">' + vectorFracHTML(p.desc.vk, subv("v", p.desc.k)) + "</span>" +
+        '<span class="factor">' + matrizRadHTML(p.Q, "Q", null, -1) + "</span>" +
+        '<span class="factor">' + matrizRadHTML(p.R, "R", null, -1) + "</span>";
+    } else if (p.tipo === "dependiente"){
+      opHTML = '<span class="etiqueta-paso">Columna linealmente dependiente</span>' +
+        subv("v", p.desc.k) + " = 0";
+      $("fila-factores").innerHTML =
+        '<span class="factor">' + vectorFracHTML(p.desc.vk, subv("v", p.desc.k)) + "</span>";
+    } else { /* norma */
+      opHTML = '<span class="etiqueta-paso">Normalización (la norma ingresa a R en la posición (' +
+        (p.desc.k + 1) + "," + (p.desc.k + 1) + "); la columna " + (p.desc.k + 1) + " de Q queda lista)</span>" +
+        "&Vert;" + subv("v", p.desc.k) + "&Vert; = &radic;<span class=\"radicando\">" + fracHTML(p.desc.s) +
+        "</span> = " + radHTML(p.desc.norma) + ", &nbsp; " +
+        subv("q", p.desc.k) + " = " + subv("v", p.desc.k) + "/&Vert;" + subv("v", p.desc.k) + "&Vert;";
+      $("fila-factores").innerHTML =
+        '<span class="factor">' + matrizRadHTML(p.Q, "Q", null, p.colRes) + "</span>" +
+        '<span class="factor">' + matrizRadHTML(p.R, "R", p.celdaR, -1) + "</span>";
+    }
+    $("texto-operacion").innerHTML = opHTML;
+    $("contador-pasos").textContent = "Paso " + pasoActual + " de " + (resultado.pasos.length - 1);
+    $("btn-inicio").disabled = pasoActual === 0;
+    $("btn-anterior").disabled = pasoActual === 0;
+    $("btn-siguiente").disabled = pasoActual === resultado.pasos.length - 1;
+    $("btn-final").disabled = pasoActual === resultado.pasos.length - 1;
+  }
+
+  function pintarDependiente(){
+    const k = resultado.colFalla;
+    $("zona-mensaje-proceso").innerHTML =
+      '<div class="mensaje-error"><b>Columna linealmente dependiente.</b> ' +
+      "Al restar a " + subv("a", k) + " sus proyecciones sobre los vectores anteriores se obtuvo " +
+      subv("v", k) + " = 0. Esto significa que " + subv("a", k) +
+      " es combinación lineal de las columnas anteriores, de modo que la hipótesis de la factorización QR " +
+      "(<u>columnas linealmente independientes</u>) no se cumple: la factorización, en la forma enunciada, no existe para esta matriz. " +
+      "El vector nulo no puede normalizarse, y ahí se detiene el proceso.</div>";
+  }
+
+  function pintarGeometria(){
+    if (m > 3){ $("seccion-geometria").classList.add("oculto"); return; }
+    const vecA = [], vecQ = [];
+    for (let k = 0; k < nc; k++){
+      const a = [], q = [];
+      for (let i = 0; i < m; i++){
+        a.push(A[i][k].aNumero());
+        q.push(radNumero(resultado.Q[i][k]));
+      }
+      vecA.push(a); vecQ.push(q);
+    }
+    const proy = function(v){
+      if (m === 2) return [v[0], -v[1]];
+      return [v[0] - 0.6 * v[2], -v[1] + 0.45 * v[2]];
+    };
+    let maxR = 1e-9;
+    vecA.concat(vecQ).forEach(function(v){
+      const p = proy(v);
+      maxR = Math.max(maxR, Math.hypot(p[0], p[1]));
+    });
+    const W = 360, H = 320, cx = W / 2, cy = H / 2, esc = (Math.min(W, H) / 2 - 30) / maxR;
+    const P = function(v){ const p = proy(v); return [cx + esc * p[0], cy + esc * p[1]]; };
+    let s = '<svg viewBox="0 0 ' + W + " " + H + '" width="100%" style="max-width:420px;" role="img" aria-label="Vectores columna y vectores ortonormales">' +
+      '<defs><marker id="flechaG" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 z" fill="#8C8C8C"/></marker>' +
+      '<marker id="flechaA" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 z" fill="#254AA5"/></marker></defs>';
+    /* ejes */
+    const ejes = m === 2 ? [[1,0],[0,1]] : [[1,0,0],[0,1,0],[0,0,1]];
+    ejes.forEach(function(e, idx){
+      const q = P(e.map(function(x){ return x * maxR * 1.05; }));
+      const q2 = P(e.map(function(x){ return x * -maxR * 1.05; }));
+      s += '<line x1="' + q2[0] + '" y1="' + q2[1] + '" x2="' + q[0] + '" y2="' + q[1] +
+           '" stroke="#D9D9D9" stroke-width="1"/>' +
+           '<text x="' + q[0] + '" y="' + q[1] + '" font-size="11" fill="#8C8C8C">e' + (idx + 1) + "</text>";
+    });
+    if (m === 2){
+      s += '<circle cx="' + cx + '" cy="' + cy + '" r="' + esc + '" fill="none" stroke="#B9C6E8" stroke-width="1" stroke-dasharray="4 4"/>';
+      $("leyenda-circulo").innerHTML = '&nbsp;&nbsp;&nbsp;<span class="cuad" style="background:none;border:1.5px dashed #B9C6E8;"></span>circunferencia unitaria';
+    } else {
+      $("leyenda-circulo").innerHTML = "";
+    }
+    const flecha = function(v, color, marca, etiqueta){
+      const p = P(v);
+      s += '<line x1="' + cx + '" y1="' + cy + '" x2="' + p[0] + '" y2="' + p[1] +
+           '" stroke="' + color + '" stroke-width="2" marker-end="url(#' + marca + ')"/>' +
+           '<text x="' + (p[0] + 4) + '" y="' + (p[1] - 4) + '" font-size="13" fill="' + color +
+           '" font-family="Georgia,serif" font-style="italic">' + etiqueta + "</text>";
+    };
+    vecA.forEach(function(v, k){ flecha(v, "#8C8C8C", "flechaG", "a" + (k + 1)); });
+    vecQ.forEach(function(v, k){ flecha(v, "#254AA5", "flechaA", "q" + (k + 1)); });
+    s += "</svg>";
+    $("cont-svg").innerHTML = s;
+    $("seccion-geometria").classList.remove("oculto");
+  }
+
+  function pintarVerificacion(){
+    const prod = productoQR(resultado, m, nc);
+    const okQR = matricesFracIguales(prod, A);
+    const QtQ = productoQtQ(resultado, nc);
+    let h = '<p style="margin:0;font-size:0.92rem;">Cada entrada de QR es una suma de productos con el mismo radicando, de modo que el resultado es racional y puede compararse de forma exacta con A; lo mismo ocurre con Q<sup>T</sup>Q.</p>' +
+      '<div class="fila-factores">' +
+      '<span class="factor">' + matrizRadHTML(resultado.Q, "Q", null, -1) + "</span>" +
+      '<span class="factor">' + matrizNumericaHTML(resultado.Q, "Q") + "</span>" +
+      '<span class="factor">' + matrizRadHTML(resultado.R, "R", null, -1) + "</span>" +
+      "</div>" +
+      '<div class="subtitulo">Primera verificación: QR = A</div>' +
+      '<div class="fila-factores"><span class="factor">' + matrizFracHTML(prod, "Q&thinsp;R") + "</span></div>";
+    h += okQR
+      ? '<div class="mensaje-exito"><b>Verificación exitosa.</b> Cada entrada del producto QR coincide con la matriz original A.</div>'
+      : '<div class="mensaje-error"><b>Discrepancia inesperada.</b> Revise las entradas ingresadas.</div>';
+    h += '<div class="subtitulo">Segunda verificación: Q<sup>T</sup>Q = I</div>' +
+      '<div class="fila-factores"><span class="factor">' + matrizFracHTML(QtQ, "Q<sup>T</sup>Q") + "</span></div>" +
+      '<div class="mensaje-exito"><b>Verificación exitosa.</b> Las columnas de Q son ortonormales: los productos punto cruzados son exactamente 0 y las normas son exactamente 1.</div>';
+    $("contenido-verificacion").innerHTML = h;
+    $("seccion-verificacion").classList.remove("oculto");
+  }
+
+  function pintarMinimos(){
+    const sol = resolverMinimos(resultado, A, B0);
+    let h = '<p style="margin:0;font-size:0.92rem;">Sustituyendo A = QR en las ecuaciones normales A<sup>T</sup>A&thinsp;X&#770; = A<sup>T</sup>B<sub>0</sub> y usando Q<sup>T</sup>Q = I, el problema se reduce al sistema triangular R&thinsp;X&#770; = Q<sup>T</sup>B<sub>0</sub>.</p>';
+    /* Q^T B0 */
+    h += '<div class="subtitulo">Lado derecho: Q<sup>T</sup>B<sub>0</sub></div><div class="ecuaciones">';
+    for (let k = 0; k < nc; k++){
+      h += "<div>(Q<sup>T</sup>B<sub>0</sub>)<sub>" + (k + 1) + "</sub> = " + radHTML(sol.rhs[k]) + "</div>";
+    }
+    h += "</div>";
+    /* sistema */
+    h += '<div class="subtitulo">Sistema R&thinsp;X&#770; = Q<sup>T</sup>B<sub>0</sub></div><div class="ecuaciones">';
+    for (let k = 0; k < nc; k++){
+      let fila = "";
+      for (let j = k; j < nc; j++){
+        const r = resultado.R[k][j];
+        const termino = radHTML(r) + "&thinsp;" + subv("x", j);
+        fila += (fila === "" ? "" : " + ") + termino;
+      }
+      h += "<div>" + fila + " = " + radHTML(sol.rhs[k]) + "</div>";
+    }
+    h += "</div><div class='subtitulo' style='font-weight:400;color:var(--gris-texto);'>Despejando de abajo hacia arriba (los radicales de cada fila se cancelan):</div><div class='ecuaciones'>";
+    for (let k = nc - 1; k >= 0; k--){
+      h += '<div class="despeje">' + subv("x", k) + " = " + fracHTML(sol.x[k]) + "</div>";
+    }
+    h += "</div>";
+    let vec = "";
+    for (let k = 0; k < nc; k++){ vec += fracHTML(sol.x[k]); if (k < nc - 1) vec += ",&nbsp;"; }
+    h += '<div class="mensaje-exito"><b>Solución de mínimos cuadrados:</b> X&#770; = (' + vec + ")<sup>T</sup>. " +
+      "Observe la reducción de complejidad: el sistema original, sin solución exacta, se transformó en un sistema triangular.</div>";
+    /* comprobación con ecuaciones normales */
+    h += '<div class="nota"><b>Comprobación por las ecuaciones normales:</b> A<sup>T</sup>A = ' +
+      matrizFracHTML(sol.AtA, null, true) + " &nbsp; y &nbsp; A<sup>T</sup>B<sub>0</sub> = " +
+      matrizFracHTML(sol.Atb.map(function(x){ return [x]; }), null, true) +
+      (sol.normalesOk
+        ? ". La solución obtenida satisface A<sup>T</sup>A&thinsp;X&#770; = A<sup>T</sup>B<sub>0</sub> de forma exacta: ambas vías coinciden."
+        : ". Discrepancia inesperada con las ecuaciones normales.") + "</div>";
+    $("contenido-minimos").innerHTML = h;
+    $("seccion-minimos").classList.remove("oculto");
+  }
+
+  function factorizar(){
+    ocultarResultados();
+    const lec = leerMatriz();
+    if (lec.error){
+      $("zona-mensaje-entrada").innerHTML =
+        '<div class="mensaje-error"><b>Entrada no válida.</b> La entrada (' +
+        (lec.error[0] + 1) + "," + (lec.error[1] + 1) +
+        ") no es un número reconocible. Puede escribir enteros (3, &minus;4), fracciones (8/3, &minus;1/2) o decimales (2.5).</div>";
+      return;
+    }
+    A = lec.M;
+    B0 = null;
+    if ($("chk-mc").checked){
+      const lb = leerB();
+      if (lb.error !== undefined){
+        $("zona-mensaje-entrada").innerHTML =
+          '<div class="mensaje-error"><b>Entrada no válida.</b> La entrada ' + (lb.error + 1) +
+          " del vector B<sub>0</sub> no es un número reconocible.</div>";
+        return;
+      }
+      B0 = lb.v;
+    }
+    resultado = factorizarQR(A);
+    pasoActual = 0;
+    $("seccion-proceso").classList.remove("oculto");
+    pintarPaso();
+    if (!resultado.ok){
+      pasoActual = resultado.pasos.length - 1;
+      pintarPaso();
+      pintarDependiente();
+      if (B0) $("zona-mensaje-proceso").innerHTML +=
+        '<div class="nota"><b>Nota:</b> el problema de mínimos cuadrados por esta vía requiere la factorización QR, que no existe para esta matriz.</div>';
+      return;
+    }
+    pintarGeometria();
+    pintarVerificacion();
+    if (B0) pintarMinimos();
+    $("seccion-proceso").scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+
+  function reiniciar(){
+    ocultarResultados();
+    fijarValores(null, null);
+    $("chk-mc").checked = false;
+    $("cont-b").classList.add("oculto");
+  }
+  function cargarAjuste(){
+    m = 3; nc = 2;
+    $("sel-m").value = "3"; ajustarOpcionesColumnas(); $("sel-nc").value = "2";
+    construirRejilla();
+    ocultarResultados();
+    fijarValores([["1","0"],["1","1"],["1","2"]], ["1","2","4"]);
+    $("chk-mc").checked = true;
+    $("cont-b").classList.remove("oculto");
+  }
+  function cargarAast(){
+    m = 3; nc = 3;
+    $("sel-m").value = "3"; ajustarOpcionesColumnas(); $("sel-nc").value = "3";
+    construirRejilla();
+    ocultarResultados();
+    fijarValores([["3","1","1"],["1","3","1"],["1","1","3"]], ["","",""]);
+    $("chk-mc").checked = false;
+    $("cont-b").classList.add("oculto");
+  }
+
+  $("sel-m").addEventListener("change", function(){
+    m = parseInt(this.value, 10);
+    ajustarOpcionesColumnas();
+    nc = parseInt($("sel-nc").value, 10);
+    construirRejilla();
+    ocultarResultados();
+    if ($("chk-mc").checked) $("cont-b").classList.remove("oculto");
+  });
+  $("sel-nc").addEventListener("change", function(){
+    nc = parseInt(this.value, 10);
+    construirRejilla();
+    ocultarResultados();
+    if ($("chk-mc").checked) $("cont-b").classList.remove("oculto");
+  });
+  $("chk-mc").addEventListener("change", function(){
+    $("cont-b").classList.toggle("oculto", !this.checked);
+  });
+  $("btn-factorizar").addEventListener("click", factorizar);
+  $("btn-reiniciar").addEventListener("click", reiniciar);
+  $("btn-ej-recta").addEventListener("click", cargarAjuste);
+  $("btn-ej-a").addEventListener("click", cargarAast);
+  $("btn-inicio").addEventListener("click", function(){ pasoActual = 0; pintarPaso(); });
+  $("btn-anterior").addEventListener("click", function(){ if (pasoActual > 0){ pasoActual--; pintarPaso(); } });
+  $("btn-siguiente").addEventListener("click", function(){ if (pasoActual < resultado.pasos.length - 1){ pasoActual++; pintarPaso(); } });
+  $("btn-final").addEventListener("click", function(){ pasoActual = resultado.pasos.length - 1; pintarPaso(); });
+
+  ajustarOpcionesColumnas();
+  construirRejilla();
+})();
+}
+
+/* Exposición del núcleo para pruebas automatizadas (sin efecto en el navegador) */
+if (typeof module !== "undefined" && module.exports){
+  module.exports = { Frac: Frac, leerFrac: leerFrac, factorizarQR: factorizarQR,
+                     productoQR: productoQR, productoQtQ: productoQtQ,
+                     resolverMinimos: resolverMinimos, matricesFracIguales: matricesFracIguales,
+                     raizDeFrac: raizDeFrac, puntoVec: puntoVec };
+}
+</script>
+</body>
+</html>

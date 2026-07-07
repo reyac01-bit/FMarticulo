@@ -1,0 +1,675 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cholesky y LDL^T interactivo</title>
+<meta name="description" content="Artefacto interactivo para matrices simétricas: verificación de simetría, criterio de Sylvester con menores visibles, y factorizaciones LDL^T y de Cholesky con aritmética exacta.">
+<style>
+:root{
+  --azul:#254AA5;
+  --azul-oscuro:#17336E;
+  --marfil:#F8F8F5;
+  --gris-panel:#F2F2F2;
+  --gris-barra:#8C8C8C;
+  --gris-borde:#D9D9D9;
+  --tinta:#1E2126;
+  --gris-texto:#5A5F6A;
+  --verde:#006400;
+  --rojo:#A3262C;
+  --rojo-fondo:#FBEDED;
+  --resalte:#FFE9A8;
+  --fuente-ui:"Helvetica Neue",Helvetica,Arial,sans-serif;
+  --fuente-mate:"Palatino Linotype",Palatino,Georgia,serif;
+}
+*{box-sizing:border-box;}
+html{font-size:16px;}
+body{margin:0;font-family:var(--fuente-ui);color:var(--tinta);background:#FBFBF9;line-height:1.55;}
+header{background:#fff;border-bottom:3px solid var(--azul);padding:1.1rem 1rem 0.9rem;}
+.cabecera-int{max-width:1000px;margin:0 auto;}
+header h1{margin:0;font-size:1.45rem;color:var(--azul);font-weight:700;letter-spacing:0.01em;}
+header p{margin:0.25rem 0 0;color:var(--gris-texto);font-size:0.9rem;}
+main{max-width:1000px;margin:0 auto;padding:0 1rem 2rem;}
+footer{max-width:1000px;margin:0 auto;padding:1rem 1rem 2rem;color:var(--gris-texto);font-size:0.83rem;border-top:1px solid var(--gris-borde);}
+footer .cond{font-family:var(--fuente-mate);color:var(--tinta);}
+.tarjeta{background:#fff;border:1px solid var(--gris-borde);border-radius:6px;padding:1.1rem 1.25rem 1.25rem;margin:1.15rem 0;}
+.tarjeta-proceso{background:var(--gris-panel);border:none;border-left:5px solid var(--gris-barra);border-radius:0 6px 6px 0;}
+.tarjeta-ejemplo{background:var(--marfil);border:1px solid #ECEBE4;}
+.chip{display:inline-block;background:var(--azul);color:#fff;font-weight:700;font-size:0.85rem;padding:0.28rem 0.7rem;border-radius:3px;margin-bottom:0.6rem;letter-spacing:0.02em;}
+h2{font-size:1.05rem;color:var(--azul);margin:0 0 0.6rem;font-weight:700;}
+.nota{background:var(--marfil);border:1px solid #ECEBE4;border-radius:6px;padding:0.8rem 1rem;margin:0.9rem 0 0;font-size:0.92rem;}
+.nota b{color:var(--verde);}
+.mensaje-error{background:var(--rojo-fondo);border-left:5px solid var(--rojo);border-radius:0 6px 6px 0;padding:0.9rem 1rem;margin:0.9rem 0 0;}
+.mensaje-error b{color:var(--rojo);}
+.mensaje-exito{background:#EDF7F0;border-left:5px solid var(--verde);border-radius:0 6px 6px 0;padding:0.9rem 1rem;margin:0.9rem 0 0;}
+.mensaje-exito b{color:var(--verde);}
+.controles{display:flex;flex-wrap:wrap;gap:0.55rem;align-items:center;margin-bottom:0.9rem;}
+label.etq{font-size:0.9rem;color:var(--gris-texto);}
+select,button{font-family:var(--fuente-ui);font-size:0.9rem;}
+select{padding:0.4rem 0.5rem;border:1px solid var(--gris-borde);border-radius:4px;background:#fff;}
+button{cursor:pointer;border-radius:4px;padding:0.48rem 0.95rem;border:1px solid var(--azul);background:var(--azul);color:#fff;transition:background 0.15s ease;}
+button:hover{background:var(--azul-oscuro);}
+button:focus-visible{outline:3px solid #A9BCE8;outline-offset:1px;}
+button.sec{background:#fff;color:var(--azul);}
+button.sec:hover{background:#EEF2FB;}
+button.conmutador{border-radius:4px 0 0 4px;}
+button.conmutador + button.conmutador{border-radius:0 4px 4px 0;border-left:none;}
+button.conmutador[aria-pressed="false"]{background:#fff;color:var(--azul);}
+table.rejilla{border-collapse:separate;border-spacing:0.3rem;}
+table.rejilla input{width:4.3rem;padding:0.42rem 0.3rem;text-align:center;font-family:var(--fuente-mate);font-size:1rem;border:1px solid var(--gris-borde);border-radius:4px;}
+table.rejilla input:focus-visible{outline:2px solid var(--azul);}
+table.rejilla input.celda-mal{border-color:var(--rojo);background:var(--rojo-fondo);}
+.ayuda{font-size:0.82rem;color:var(--gris-texto);margin-top:0.4rem;}
+.mat{display:inline-flex;align-items:center;vertical-align:middle;font-family:var(--fuente-mate);font-size:1.05rem;}
+.mat .paren{border-left:2px solid var(--tinta);border-right:2px solid var(--tinta);border-radius:0.85em;padding:0.25em 0.5em;}
+.mat .paren.det{border-radius:0;border-width:1.4px;}
+.mat table{border-collapse:separate;border-spacing:0.85em 0.3em;margin:0;}
+.mat td{text-align:center;padding:0;min-width:1.1em;}
+.mat.pequena{font-size:0.95rem;}
+.mat.pequena table{border-spacing:0.6em 0.2em;}
+.rotulo-mat{font-family:var(--fuente-mate);font-style:italic;margin-right:0.4rem;}
+.frac{display:inline-flex;flex-direction:column;align-items:center;vertical-align:-0.55em;line-height:1.05;font-size:0.92em;}
+.frac .fnum{border-bottom:1.3px solid currentColor;padding:0 0.18em;}
+.frac .fden{padding:0 0.18em;}
+.radicando{border-top:1.3px solid currentColor;padding:0 0.12em;}
+.lista-menores{font-family:var(--fuente-mate);font-size:1.05rem;}
+.lista-menores > div{display:flex;flex-wrap:wrap;align-items:center;gap:0.5rem;margin:0.55rem 0;}
+.veredicto{font-family:var(--fuente-ui);font-size:0.85rem;padding:0.15rem 0.55rem;border-radius:3px;}
+.veredicto.pos{background:#E3F1E7;color:var(--verde);}
+.veredicto.neg{background:var(--rojo-fondo);color:var(--rojo);}
+.fila-factores{display:flex;flex-wrap:wrap;gap:1.6rem;align-items:center;margin-top:0.5rem;}
+.factor{display:flex;align-items:center;}
+.subtitulo{font-weight:700;color:var(--azul);font-size:0.92rem;margin:0.9rem 0 0.2rem;}
+.oculto{display:none;}
+sub{font-size:0.72em;}
+sup{font-size:0.72em;}
+@media (max-width:640px){
+  .fila-factores{flex-direction:column;align-items:flex-start;}
+  table.rejilla input{width:3.6rem;}
+  header h1{font-size:1.2rem;}
+}
+</style>
+</head>
+<body>
+<header>
+  <div class="cabecera-int">
+    <h1>Cholesky y LDL<sup>T</sup> interactivo</h1>
+    <p>Para matrices simétricas: verificación de simetría, criterio de Sylvester con los menores a la vista, y las factorizaciones <span style="font-family:var(--fuente-mate);font-style:italic;">A&nbsp;=&nbsp;LDL<sup>T</sup></span> (fracciones exactas, sin raíces) y <span style="font-family:var(--fuente-mate);font-style:italic;">A&nbsp;=&nbsp;L<sub>c</sub>L<sub>c</sub><sup>T</sup></span> (Cholesky, con radicales simplificados).</p>
+  </div>
+</header>
+
+<main>
+  <section class="tarjeta" id="seccion-entrada">
+    <h2>1. Ingrese la matriz simétrica</h2>
+    <div class="controles">
+      <label class="etq" for="sel-n">Tamaño:</label>
+      <select id="sel-n" aria-label="Tamaño de la matriz">
+        <option value="2">2 × 2</option>
+        <option value="3" selected>3 × 3</option>
+        <option value="4">4 × 4</option>
+      </select>
+      <button class="sec" id="btn-ej-a">Cargar ejemplo A* (definida positiva)</button>
+      <button class="sec" id="btn-ej-c">Cargar ejemplo C (simétrica no definida positiva)</button>
+      <button class="sec" id="btn-reiniciar">Reiniciar</button>
+    </div>
+    <p style="margin:0 0 0.35rem;font-size:0.9rem;color:var(--gris-texto);">Matriz <span class="rotulo-mat">A</span> (acepta enteros, fracciones como <span style="font-family:var(--fuente-mate);">8/3</span> y decimales como <span style="font-family:var(--fuente-mate);">2.5</span>):</p>
+    <div id="cont-rejilla"></div>
+    <p class="ayuda">Las entradas vacías se toman como 0.</p>
+    <div class="controles" style="margin-top:1rem;margin-bottom:0;">
+      <button id="btn-analizar">Analizar y factorizar</button>
+    </div>
+    <div id="zona-mensaje-entrada"></div>
+  </section>
+
+  <section class="tarjeta tarjeta-proceso oculto" id="seccion-analisis">
+    <h2>2. Análisis de la matriz</h2>
+    <div id="contenido-simetria"></div>
+    <div id="contenido-menores"></div>
+    <div id="contenido-veredicto"></div>
+  </section>
+
+  <section class="tarjeta tarjeta-ejemplo oculto" id="seccion-factorizacion">
+    <span class="chip">Factorización</span>
+    <div class="controles" style="margin-bottom:0.4rem;">
+      <button class="conmutador" id="btn-modo-ldlt" aria-pressed="true">LDL<sup>T</sup> (fracciones exactas)</button>
+      <button class="conmutador" id="btn-modo-chol" aria-pressed="false">Cholesky (radicales)</button>
+    </div>
+    <div id="contenido-factorizacion"></div>
+  </section>
+</main>
+
+<footer>
+  <p class="cond"><b style="color:var(--azul);font-family:var(--fuente-ui);">Condición de existencia.</b>
+  Una matriz simétrica A es <i>definida positiva</i> si X<sup>T</sup>AX&nbsp;&gt;&nbsp;0 para todo X&nbsp;&ne;&nbsp;0;
+  por el criterio de Sylvester, esto equivale a que todos sus menores principales líderes sean positivos.
+  En ese caso A&nbsp;=&nbsp;LDL<sup>T</sup> con D de diagonal positiva y, repartiendo la diagonal,
+  A&nbsp;=&nbsp;L<sub>c</sub>L<sub>c</sub><sup>T</sup> con L<sub>c</sub>&nbsp;=&nbsp;L&radic;D (factorización de Cholesky).</p>
+  <p>Artefacto 3 de la propuesta «Factorizaciones matriciales interactivas para la enseñanza del álgebra lineal mediante recursos HTML».
+  Revista digital Matemática, Educación e Internet, Instituto Tecnológico de Costa Rica.
+  La matriz L coincide con la de la factorización LU (artefacto <span style="font-family:monospace;">lu_interactivo.html</span>) y D con la diagonal de U.</p>
+</footer>
+
+<script>
+"use strict";
+/* ============================================================
+   Núcleo matemático: fracciones exactas con BigInt
+   ============================================================ */
+function mcdBig(a, b){
+  a = a < 0n ? -a : a;
+  b = b < 0n ? -b : b;
+  while (b){ const t = a % b; a = b; b = t; }
+  return a;
+}
+class Frac{
+  constructor(n, d){
+    if (d === undefined) d = 1n;
+    n = BigInt(n); d = BigInt(d);
+    if (d === 0n) throw new Error("Denominador cero");
+    if (d < 0n){ n = -n; d = -d; }
+    const g = mcdBig(n, d);
+    if (g > 1n){ n = n / g; d = d / g; }
+    this.n = n; this.d = d;
+  }
+  static cero(){ return new Frac(0n, 1n); }
+  static uno(){ return new Frac(1n, 1n); }
+  sumar(o){ return new Frac(this.n * o.d + o.n * this.d, this.d * o.d); }
+  restar(o){ return new Frac(this.n * o.d - o.n * this.d, this.d * o.d); }
+  por(o){ return new Frac(this.n * o.n, this.d * o.d); }
+  entre(o){
+    if (o.n === 0n) throw new Error("División entre cero");
+    return new Frac(this.n * o.d, this.d * o.n);
+  }
+  negado(){ return new Frac(-this.n, this.d); }
+  esCero(){ return this.n === 0n; }
+  esUno(){ return this.n === 1n && this.d === 1n; }
+  esNegativa(){ return this.n < 0n; }
+  esPositiva(){ return this.n > 0n; }
+  igualA(o){ return this.n === o.n && this.d === o.d; }
+  aTexto(){ return this.d === 1n ? this.n.toString() : this.n.toString() + "/" + this.d.toString(); }
+  aNumero(){ return Number(this.n) / Number(this.d); }
+}
+function leerFrac(txt){
+  if (txt === null || txt === undefined) return null;
+  let s = String(txt).trim().replace(",", ".");
+  if (s === "") return Frac.cero();
+  s = s.replace(/\u2212/g, "-");
+  let m = s.match(/^([+-]?\d+)$/);
+  if (m) return new Frac(BigInt(m[1]), 1n);
+  m = s.match(/^([+-]?\d+)\s*\/\s*(-?\d+)$/);
+  if (m){
+    const den = BigInt(m[2]);
+    if (den === 0n) return null;
+    return new Frac(BigInt(m[1]), den);
+  }
+  m = s.match(/^([+-]?)(\d*)\.(\d+)$/);
+  if (m){
+    const signo = m[1] === "-" ? -1n : 1n;
+    const ent = m[2] === "" ? "0" : m[2];
+    const dec = m[3];
+    const pot = 10n ** BigInt(dec.length);
+    return new Frac(signo * (BigInt(ent) * pot + BigInt(dec)), pot);
+  }
+  return null;
+}
+function clonar(M){ return M.map(function(f){ return f.slice(); }); }
+function multiplicar(P, Q){
+  const n = P.length, m = Q[0].length, r = Q.length;
+  const R = [];
+  for (let i = 0; i < n; i++){
+    R.push([]);
+    for (let j = 0; j < m; j++){
+      let s = Frac.cero();
+      for (let k = 0; k < r; k++) s = s.sumar(P[i][k].por(Q[k][j]));
+      R[i].push(s);
+    }
+  }
+  return R;
+}
+function matricesIguales(P, Q){
+  for (let i = 0; i < P.length; i++)
+    for (let j = 0; j < P[i].length; j++)
+      if (!P[i][j].igualA(Q[i][j])) return false;
+  return true;
+}
+function transpuesta(M){
+  const n = M.length, m = M[0].length, T = [];
+  for (let j = 0; j < m; j++){ T.push([]); for (let i = 0; i < n; i++) T[j].push(M[i][j]); }
+  return T;
+}
+
+/* Determinante exacto por cofactores (n <= 4) */
+function determinante(M){
+  const n = M.length;
+  if (n === 1) return M[0][0];
+  if (n === 2) return M[0][0].por(M[1][1]).restar(M[0][1].por(M[1][0]));
+  let det = Frac.cero();
+  for (let j = 0; j < n; j++){
+    if (M[0][j].esCero()) continue;
+    const sub = [];
+    for (let i = 1; i < n; i++){
+      sub.push([]);
+      for (let k = 0; k < n; k++) if (k !== j) sub[i - 1].push(M[i][k]);
+    }
+    const term = M[0][j].por(determinante(sub));
+    det = (j % 2 === 0) ? det.sumar(term) : det.restar(term);
+  }
+  return det;
+}
+
+/* ============================================================
+   Análisis de simetría y criterio de Sylvester
+   ============================================================ */
+function verificarSimetria(A){
+  const n = A.length, violaciones = [];
+  for (let i = 0; i < n; i++)
+    for (let j = i + 1; j < n; j++)
+      if (!A[i][j].igualA(A[j][i])) violaciones.push([i, j]);
+  return violaciones;
+}
+function menoresPrincipales(A){
+  const n = A.length, lista = [];
+  for (let k = 1; k <= n; k++){
+    const sub = [];
+    for (let i = 0; i < k; i++) sub.push(A[i].slice(0, k));
+    lista.push({ k: k, sub: sub, valor: determinante(sub) });
+  }
+  return lista;
+}
+
+/* ============================================================
+   Eliminación sin intercambios: L y D (pivotes = diagonal de U)
+   Solo se invoca cuando todos los menores son positivos.
+   ============================================================ */
+function factorizarLDLt(A){
+  const n = A.length;
+  const U = clonar(A);
+  const L = [];
+  for (let i = 0; i < n; i++){
+    L.push([]);
+    for (let j = 0; j < n; j++) L[i].push(i === j ? Frac.uno() : Frac.cero());
+  }
+  for (let k = 0; k < n - 1; k++){
+    for (let i = k + 1; i < n; i++){
+      if (U[i][k].esCero()) continue;
+      const m = U[i][k].entre(U[k][k]);
+      for (let j = 0; j < n; j++) U[i][j] = U[i][j].restar(m.por(U[k][j]));
+      L[i][k] = m;
+    }
+  }
+  const d = [];
+  for (let i = 0; i < n; i++) d.push(U[i][i]);
+  return { L: L, d: d };
+}
+
+/* ============================================================
+   Radicales simplificados: c · sqrt(m) con m entero libre de cuadrados
+   ============================================================ */
+function extraerCuadrado(N){ /* N BigInt >= 0 -> {s, m} con N = s^2 * m */
+  if (N === 0n) return { s: 0n, m: 1n };
+  let s = 1n, m = N, i = 2n, iter = 0;
+  while (i * i <= m && iter < 100000){
+    while (m % (i * i) === 0n){ m /= i * i; s *= i; }
+    i += 1n; iter += 1;
+  }
+  return { s: s, m: m };
+}
+function raizDeFrac(f){ /* f >= 0 -> {c: Frac, m: BigInt} con sqrt(f) = c * sqrt(m) */
+  if (f.esCero()) return { c: Frac.cero(), m: 1n };
+  const em = extraerCuadrado(f.n * f.d);
+  return { c: new Frac(em.s, f.d), m: em.m };
+}
+/* Factor de Cholesky simbólico: entrada (i,j) = L[i][j] * sqrt(d[j]) */
+function choleskySimbolica(L, d){
+  const n = L.length;
+  const raices = d.map(raizDeFrac);
+  const Lc = [];
+  for (let i = 0; i < n; i++){
+    Lc.push([]);
+    for (let j = 0; j < n; j++){
+      if (j > i || L[i][j].esCero()){ Lc[i].push({ c: Frac.cero(), m: 1n }); continue; }
+      Lc[i].push({ c: L[i][j].por(raices[j].c), m: raices[j].m });
+    }
+  }
+  return { Lc: Lc, raices: raices };
+}
+/* Producto exacto Lc * Lc^T sin operar radicales: (i,j) = sum_k L[i][k] L[j][k] d[k] */
+function productoCholesky(L, d){
+  const n = L.length, R = [];
+  for (let i = 0; i < n; i++){
+    R.push([]);
+    for (let j = 0; j < n; j++){
+      let s = Frac.cero();
+      for (let k = 0; k < n; k++) s = s.sumar(L[i][k].por(L[j][k]).por(d[k]));
+      R[i].push(s);
+    }
+  }
+  return R;
+}
+
+/* ============================================================
+   Interfaz (solo en navegador)
+   ============================================================ */
+if (typeof document !== "undefined"){
+(function(){
+  const $ = function(id){ return document.getElementById(id); };
+
+  function fracHTML(f){
+    if (f.d === 1n) return f.n.toString().replace("-", "&minus;");
+    const neg = f.n < 0n;
+    const num = (neg ? -f.n : f.n).toString();
+    return (neg ? "&minus;" : "") +
+      '<span class="frac"><span class="fnum">' + num +
+      '</span><span class="fden">' + f.d.toString() + "</span></span>";
+  }
+  function radHTML(r){ /* r = {c: Frac, m: BigInt} */
+    if (r.c.esCero()) return "0";
+    if (r.m === 1n) return fracHTML(r.c);
+    const neg = r.c.esNegativa();
+    const abs = neg ? r.c.negado() : r.c;
+    const radical = "&radic;<span class=\"radicando\">" + r.m.toString() + "</span>";
+    let cuerpo;
+    if (abs.d === 1n){
+      cuerpo = (abs.n === 1n ? "" : abs.n.toString()) + radical;
+    } else {
+      const numTxt = (abs.n === 1n ? "" : abs.n.toString()) + radical;
+      cuerpo = '<span class="frac"><span class="fnum">' + numTxt +
+               '</span><span class="fden">' + abs.d.toString() + "</span></span>";
+    }
+    return (neg ? "&minus;" : "") + cuerpo;
+  }
+  function radNumero(r){ return r.c.aNumero() * Math.sqrt(Number(r.m)); }
+  function matrizHTML(M, rotulo, opciones){
+    const op = opciones || {};
+    let h = '<span class="mat' + (op.pequena ? " pequena" : "") + '">';
+    if (rotulo) h += '<span class="rotulo-mat">' + rotulo + "</span><span style='margin-right:0.35rem;'>=</span>";
+    h += '<span class="paren' + (op.det ? " det" : "") + '"><table><tbody>';
+    for (let i = 0; i < M.length; i++){
+      h += "<tr>";
+      for (let j = 0; j < M[i].length; j++){
+        h += "<td>" + (op.radical ? radHTML(M[i][j]) : fracHTML(M[i][j])) + "</td>";
+      }
+      h += "</tr>";
+    }
+    h += "</tbody></table></span></span>";
+    return h;
+  }
+  function matrizNumericaHTML(Lc, rotulo){
+    const M = Lc.map(function(f){ return f.map(function(r){
+      const v = radNumero(r);
+      return Object.is(v, -0) ? "0" : (Math.round(v * 10000) / 10000).toString().replace("-", "&minus;");
+    }); });
+    let h = '<span class="mat pequena"><span class="rotulo-mat">' + rotulo +
+            "</span><span style='margin-right:0.35rem;'>&asymp;</span>" +
+            '<span class="paren"><table><tbody>';
+    for (let i = 0; i < M.length; i++){
+      h += "<tr>";
+      for (let j = 0; j < M[i].length; j++) h += "<td>" + M[i][j] + "</td>";
+      h += "</tr>";
+    }
+    h += "</tbody></table></span></span>";
+    return h;
+  }
+
+  let n = 3;
+  let A = null;
+  let analisis = null; /* { simetrica, menores, definidaPositiva, fallaK } */
+  let fact = null;     /* { L, d, chol } */
+  let modo = "ldlt";
+
+  function construirRejilla(){
+    let h = '<table class="rejilla"><tbody>';
+    for (let i = 0; i < n; i++){
+      h += "<tr>";
+      for (let j = 0; j < n; j++){
+        h += '<td><input type="text" id="a-' + i + "-" + j +
+             '" autocomplete="off" aria-label="Entrada (' + (i + 1) + "," + (j + 1) + ')"></td>';
+      }
+      h += "</tr>";
+    }
+    h += "</tbody></table>";
+    $("cont-rejilla").innerHTML = h;
+  }
+  function fijarValores(vals){
+    for (let i = 0; i < n; i++)
+      for (let j = 0; j < n; j++){
+        const inp = $("a-" + i + "-" + j);
+        inp.value = vals ? vals[i][j] : "";
+        inp.classList.remove("celda-mal");
+      }
+  }
+  function ocultarResultados(){
+    $("seccion-analisis").classList.add("oculto");
+    $("seccion-factorizacion").classList.add("oculto");
+    $("zona-mensaje-entrada").innerHTML = "";
+    for (let i = 0; i < n; i++)
+      for (let j = 0; j < n; j++) $("a-" + i + "-" + j).classList.remove("celda-mal");
+    analisis = null; fact = null;
+  }
+  function leerMatriz(){
+    const M = [];
+    for (let i = 0; i < n; i++){
+      M.push([]);
+      for (let j = 0; j < n; j++){
+        const f = leerFrac($("a-" + i + "-" + j).value);
+        if (f === null) return { error: [i, j] };
+        M[i].push(f);
+      }
+    }
+    return { M: M };
+  }
+
+  function pintarSimetria(violaciones){
+    if (violaciones.length === 0){
+      $("contenido-simetria").innerHTML =
+        '<div class="mensaje-exito"><b>La matriz es simétrica:</b> a<sub>ij</sub> = a<sub>ji</sub> para todas las entradas.</div>';
+      return true;
+    }
+    let detalle = "";
+    violaciones.forEach(function(v, idx){
+      const i = v[0], j = v[1];
+      $("a-" + i + "-" + j).classList.add("celda-mal");
+      $("a-" + j + "-" + i).classList.add("celda-mal");
+      detalle += (idx > 0 ? "; " : "") +
+        "a<sub>" + (i + 1) + (j + 1) + "</sub> = " + fracHTML(A[i][j]) +
+        " &ne; " + fracHTML(A[j][i]) + " = a<sub>" + (j + 1) + (i + 1) + "</sub>";
+    });
+    $("contenido-simetria").innerHTML =
+      '<div class="mensaje-error"><b>La matriz no es simétrica.</b> ' +
+      "Las factorizaciones de esta herramienta requieren A = A<sup>T</sup>. Entradas que violan la simetría (resaltadas en la rejilla): " +
+      detalle + ".</div>";
+    return false;
+  }
+
+  function pintarMenores(menores){
+    let h = '<div class="subtitulo" style="color:var(--tinta);">Criterio de Sylvester: menores principales líderes</div>' +
+      '<p style="font-size:0.88rem;color:var(--gris-texto);margin:0.1rem 0 0.3rem;">La matriz simétrica es definida positiva si y solo si todos los menores &Delta;<sub>k</sub> son positivos.</p>' +
+      '<div class="lista-menores">';
+    menores.forEach(function(mn){
+      const pos = mn.valor.esPositiva();
+      h += "<div><span>&Delta;<sub>" + mn.k + "</sub> =</span> " +
+        matrizHTML(mn.sub, null, { det: true, pequena: true }) +
+        " <span>= " + fracHTML(mn.valor) + "</span> " +
+        '<span class="veredicto ' + (pos ? "pos" : "neg") + '">' +
+        (pos ? "positivo" : (mn.valor.esCero() ? "cero" : "negativo")) + "</span></div>";
+    });
+    h += "</div>";
+    $("contenido-menores").innerHTML = h;
+  }
+
+  function pintarVeredicto(){
+    if (analisis.definidaPositiva){
+      /* pivotes como cocientes de menores consecutivos */
+      let piv = "";
+      analisis.menores.forEach(function(mn, idx){
+        const anterior = idx === 0 ? Frac.uno() : analisis.menores[idx - 1].valor;
+        const dk = mn.valor.entre(anterior);
+        piv += (idx > 0 ? ", &nbsp;" : "") + "d<sub>" + mn.k + "</sub> = " +
+          (idx === 0 ? "&Delta;<sub>1</sub>" :
+            "&Delta;<sub>" + mn.k + "</sub>/&Delta;<sub>" + (mn.k - 1) + "</sub>") +
+          " = " + fracHTML(dk);
+      });
+      $("contenido-veredicto").innerHTML =
+        '<div class="mensaje-exito"><b>La matriz es definida positiva:</b> todos los menores son positivos. ' +
+        "Más aún, los pivotes de la eliminación son cocientes de menores consecutivos: " +
+        '<span style="font-family:var(--fuente-mate);">' + piv + "</span>. " +
+        "Esta será exactamente la diagonal de D.</div>";
+      return;
+    }
+    const k = analisis.fallaK;
+    const mn = analisis.menores[k - 1];
+    const anterior = k === 1 ? Frac.uno() : analisis.menores[k - 2].valor;
+    let h = '<div class="mensaje-error"><b>La matriz no es definida positiva.</b> ' +
+      "El menor &Delta;<sub>" + k + "</sub> = " + fracHTML(mn.valor) + " no es positivo. ";
+    if (!anterior.esCero()){
+      const dk = mn.valor.entre(anterior);
+      h += "En consecuencia, el pivote d<sub>" + k + "</sub> = " +
+        (k === 1 ? "&Delta;<sub>1</sub>" : "&Delta;<sub>" + k + "</sub>/&Delta;<sub>" + (k - 1) + "</sub>") +
+        " = " + fracHTML(dk) + (dk.esCero() ? " es cero" : " es negativo") +
+        ", y la entrada (" + k + "," + k + ") del factor de Cholesky exigiría " +
+        "&ell;<sub>" + k + k + "</sub> = &radic;<span class=\"radicando\">" + fracHTML(dk) + "</span>: " +
+        (dk.esCero()
+          ? "una entrada diagonal nula, prohibida por la definición del factor (diagonal positiva)."
+          : "la raíz cuadrada de un número negativo.");
+    } else {
+      h += "Además, el menor anterior es cero, de modo que la eliminación sin intercambios se detiene antes de llegar a esta etapa.";
+    }
+    h += " El fallo no es un accidente del método, sino el síntoma algebraico de que la hipótesis del teorema de Cholesky no se cumple.</div>" +
+      '<div class="nota"><b>Observación:</b> cuando los menores son todos no nulos pero alguno es negativo, ' +
+      "la variante LDL<sup>T</sup> aún puede construirse con entradas negativas en D; ese caso excede el alcance de esta herramienta, " +
+      "restringida al caso definido positivo tratado en el artículo.</div>";
+    $("contenido-veredicto").innerHTML = h;
+  }
+
+  function pintarFactorizacion(){
+    const L = fact.L, d = fact.d, nn = L.length;
+    const D = [];
+    for (let i = 0; i < nn; i++){
+      D.push([]);
+      for (let j = 0; j < nn; j++) D[i].push(i === j ? d[i] : Frac.cero());
+    }
+    let h = "";
+    if (modo === "ldlt"){
+      const Lt = transpuesta(L);
+      const prod = multiplicar(multiplicar(L, D), Lt);
+      const ok = matricesIguales(prod, A);
+      h += '<p style="margin:0;font-size:0.92rem;">La matriz L es la misma de la factorización LU de A, y D se lee de la diagonal de U: la factorización simétrica ya estaba calculada. Todo transcurre en fracciones exactas; no aparecen raíces cuadradas.</p>' +
+        '<div class="fila-factores">' +
+        '<span class="factor">' + matrizHTML(L, "L") + "</span>" +
+        '<span class="factor">' + matrizHTML(D, "D") + "</span>" +
+        '<span class="factor">' + matrizHTML(Lt, "L<sup>T</sup>") + "</span>" +
+        "</div>" +
+        '<div class="subtitulo">Verificación</div>' +
+        '<div class="fila-factores"><span class="factor">' +
+        matrizHTML(prod, "L&thinsp;D&thinsp;L<sup>T</sup>") + "</span></div>";
+      h += ok
+        ? '<div class="mensaje-exito"><b>Verificación exitosa.</b> Cada entrada del producto LDL<sup>T</sup> coincide con la matriz original. Por lo tanto, A&nbsp;=&nbsp;LDL<sup>T</sup>.</div>'
+        : '<div class="mensaje-error"><b>Discrepancia inesperada.</b> Revise las entradas ingresadas.</div>';
+    } else {
+      const chol = choleskySimbolica(L, d);
+      const prod = productoCholesky(L, d);
+      const ok = matricesIguales(prod, A);
+      /* raíz de D como matriz diagonal simbólica */
+      const RD = [];
+      for (let i = 0; i < nn; i++){
+        RD.push([]);
+        for (let j = 0; j < nn; j++) RD[i].push(i === j ? chol.raices[i] : { c: Frac.cero(), m: 1n });
+      }
+      const LcT = [];
+      for (let j = 0; j < nn; j++){ LcT.push([]); for (let i = 0; i < nn; i++) LcT[j].push(chol.Lc[i][j]); }
+      h += '<p style="margin:0;font-size:0.92rem;">Repartiendo la diagonal, L<sub>c</sub> = L&radic;D comprime la factorización en un único factor y su transpuesta, al precio de introducir radicales (aquí en forma simplificada).</p>' +
+        '<div class="fila-factores">' +
+        '<span class="factor">' + matrizHTML(RD, "&radic;D", { radical: true }) + "</span>" +
+        '<span class="factor">' + matrizHTML(chol.Lc, "L<sub>c</sub>", { radical: true }) + "</span>" +
+        '<span class="factor">' + matrizNumericaHTML(chol.Lc, "L<sub>c</sub>") + "</span>" +
+        "</div>" +
+        '<div class="subtitulo">Verificación</div>' +
+        '<p style="margin:0 0 0.2rem;font-size:0.88rem;color:var(--gris-texto);">Cada entrada de L<sub>c</sub>L<sub>c</sub><sup>T</sup> es una suma de productos &ell;<sub>ik</sub>&ell;<sub>jk</sub>d<sub>k</sub>, de modo que el producto es racional y puede compararse de forma exacta con A.</p>' +
+        '<div class="fila-factores">' +
+        '<span class="factor">' + matrizHTML(LcT, "L<sub>c</sub><sup>T</sup>", { radical: true, pequena: true }) + "</span>" +
+        '<span class="factor">' + matrizHTML(prod, "L<sub>c</sub>&thinsp;L<sub>c</sub><sup>T</sup>") + "</span>" +
+        "</div>";
+      h += ok
+        ? '<div class="mensaje-exito"><b>Verificación exitosa.</b> Cada entrada del producto L<sub>c</sub>L<sub>c</sub><sup>T</sup> coincide con la matriz original. Por lo tanto, A&nbsp;=&nbsp;L<sub>c</sub>L<sub>c</sub><sup>T</sup>.</div>'
+        : '<div class="mensaje-error"><b>Discrepancia inesperada.</b> Revise las entradas ingresadas.</div>';
+    }
+    $("contenido-factorizacion").innerHTML = h;
+    $("btn-modo-ldlt").setAttribute("aria-pressed", modo === "ldlt" ? "true" : "false");
+    $("btn-modo-chol").setAttribute("aria-pressed", modo === "chol" ? "true" : "false");
+  }
+
+  function analizar(){
+    ocultarResultados();
+    const lec = leerMatriz();
+    if (lec.error){
+      $("zona-mensaje-entrada").innerHTML =
+        '<div class="mensaje-error"><b>Entrada no válida.</b> La entrada (' +
+        (lec.error[0] + 1) + "," + (lec.error[1] + 1) +
+        ") no es un número reconocible. Puede escribir enteros (3, &minus;4), fracciones (8/3, &minus;1/2) o decimales (2.5).</div>";
+      return;
+    }
+    A = lec.M;
+    $("seccion-analisis").classList.remove("oculto");
+    const violaciones = verificarSimetria(A);
+    const esSim = pintarSimetria(violaciones);
+    if (!esSim){
+      $("contenido-menores").innerHTML = "";
+      $("contenido-veredicto").innerHTML = "";
+      return;
+    }
+    const menores = menoresPrincipales(A);
+    let fallaK = 0;
+    for (let idx = 0; idx < menores.length; idx++){
+      if (!menores[idx].valor.esPositiva()){ fallaK = menores[idx].k; break; }
+    }
+    analisis = { menores: menores, definidaPositiva: fallaK === 0, fallaK: fallaK };
+    pintarMenores(menores);
+    pintarVeredicto();
+    if (analisis.definidaPositiva){
+      fact = factorizarLDLt(A);
+      modo = "ldlt";
+      $("seccion-factorizacion").classList.remove("oculto");
+      pintarFactorizacion();
+    }
+    $("seccion-analisis").scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+
+  function reiniciar(){ ocultarResultados(); fijarValores(null); }
+  function cargarEjemploA(){
+    if (n !== 3){ n = 3; $("sel-n").value = "3"; construirRejilla(); }
+    ocultarResultados();
+    fijarValores([["3","1","1"],["1","3","1"],["1","1","3"]]);
+  }
+  function cargarEjemploC(){
+    if (n !== 2){ n = 2; $("sel-n").value = "2"; construirRejilla(); }
+    ocultarResultados();
+    fijarValores([["1","2"],["2","1"]]);
+  }
+
+  $("sel-n").addEventListener("change", function(){
+    n = parseInt(this.value, 10);
+    construirRejilla();
+    ocultarResultados();
+  });
+  $("btn-analizar").addEventListener("click", analizar);
+  $("btn-reiniciar").addEventListener("click", reiniciar);
+  $("btn-ej-a").addEventListener("click", cargarEjemploA);
+  $("btn-ej-c").addEventListener("click", cargarEjemploC);
+  $("btn-modo-ldlt").addEventListener("click", function(){ if (fact){ modo = "ldlt"; pintarFactorizacion(); } });
+  $("btn-modo-chol").addEventListener("click", function(){ if (fact){ modo = "chol"; pintarFactorizacion(); } });
+
+  construirRejilla();
+})();
+}
+
+/* Exposición del núcleo para pruebas automatizadas (sin efecto en el navegador) */
+if (typeof module !== "undefined" && module.exports){
+  module.exports = { Frac: Frac, leerFrac: leerFrac, determinante: determinante,
+                     verificarSimetria: verificarSimetria, menoresPrincipales: menoresPrincipales,
+                     factorizarLDLt: factorizarLDLt, extraerCuadrado: extraerCuadrado,
+                     raizDeFrac: raizDeFrac, choleskySimbolica: choleskySimbolica,
+                     productoCholesky: productoCholesky, multiplicar: multiplicar,
+                     matricesIguales: matricesIguales, transpuesta: transpuesta };
+}
+</script>
+</body>
+</html>
